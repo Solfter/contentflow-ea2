@@ -1,0 +1,37 @@
+use("ev-2-bd-nosql");
+
+const duplicados = {};
+
+duplicados.reacciones = db.reacciones.aggregate([
+    { $group: {
+        _id: { usuario: "$usuario_id", publicacion: "$publicacion_id" },
+        cantidad: { $sum: 1 },
+        ids: { $push: "$_id" },
+        tipos: { $push: "$tipo_reaccion" }
+    } },
+    { $match: { cantidad: { $gt: 1 } } }
+]).toArray();
+
+
+duplicados.reacciones_antes_de_publicacion = db.reacciones.aggregate([
+    { $lookup: { from: "publicaciones", localField: "publicacion_id", foreignField: "_id", as: "p" } },
+    { $unwind: "$p" },
+    { $match: { $expr: { $lt: [ "$fecha", "$p.fecha_publicacion" ] } } },
+    { $count: "total" }
+]).toArray();
+
+duplicados.comentarios_antes_de_publicacion = db.comentarios.aggregate([
+    { $lookup: { from: "publicaciones", localField: "publicacion_id", foreignField: "_id", as: "p" } },
+    { $unwind: "$p" },
+    { $match: { $expr: { $lt: [ "$fecha", "$p.fecha_publicacion" ] } } },
+    { $count: "total" }
+]).toArray();
+
+duplicados.publicaciones_antes_de_registro = db.publicaciones.aggregate([
+    { $lookup: { from: "usuarios", localField: "usuario_id", foreignField: "_id", as: "u" } },
+    { $unwind: "$u" },
+    { $match: { $expr: { $lt: [ "$fecha_publicacion", "$u.fecha_registro" ] } } },
+    { $count: "total" }
+]).toArray();
+
+duplicados;

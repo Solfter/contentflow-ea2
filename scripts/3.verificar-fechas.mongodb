@@ -1,0 +1,16 @@
+use("ev-2-bd-nosql");
+
+const tipoFechas = {
+    usuarios_texto:      db.usuarios.countDocuments({ fecha_registro: { $type: "string" } }),
+    usuarios_date:       db.usuarios.countDocuments({ fecha_registro: { $type: "date" } }),
+    publicaciones_texto: db.publicaciones.countDocuments({ fecha_publicacion: { $type: "string" } }),
+    publicaciones_date:  db.publicaciones.countDocuments({ fecha_publicacion: { $type: "date" } }),
+    reacciones_texto:    db.reacciones.countDocuments({ fecha: { $type: "string" } }),
+    reacciones_date:     db.reacciones.countDocuments({ fecha: { $type: "date" } }),
+    comentarios_texto:   db.comentarios.countDocuments({ fecha: { $type: "string" } }),
+    comentarios_date:    db.comentarios.countDocuments({ fecha: { $type: "date" } }),
+    campanas_texto:      db.campanas.countDocuments({ fecha_inicio: { $type: "string" }, fecha_fin: { $type: "string" } }),
+    campanas_date:       db.campanas.countDocuments({ fecha_inicio: { $type: "date" }, fecha_fin: { $type: "date" } })
+};
+
+tipoFechas;

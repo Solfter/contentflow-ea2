@@ -1,0 +1,31 @@
+use("ev-2-bd-nosql");
+
+const r = {};
+
+// ---------- Índices adicionales ----------
+r.crear = {
+    correo_unico: db.usuarios.createIndex({ correo: 1 }, { unique: true, name: "idx_correo_unico" }),
+    comentarios_publicacion: db.comentarios.createIndex({ publicacion_id: 1 }),
+    publicaciones_usuario: db.publicaciones.createIndex({ usuario_id: 1 }),
+    reacciones_usuario: db.reacciones.createIndex({ usuario_id: 1 }),
+    publicaciones_fecha: db.publicaciones.createIndex({ fecha_publicacion: -1 })
+};
+
+r.indices_por_coleccion = {
+    usuarios: db.usuarios.getIndexes().map(i => i.name),
+    publicaciones: db.publicaciones.getIndexes().map(i => i.name),
+    reacciones: db.reacciones.getIndexes().map(i => i.name),
+    comentarios: db.comentarios.getIndexes().map(i => i.name)
+};
+
+// ---------- Prueba de write concern y read concern ----------
+r.escritura_majority = db.reacciones.insertOne(
+    { _id: "react_wc_test", usuario_id: "user_1", publicacion_id: "pub_1", tipo_reaccion: "Me gusta", fecha: new Date() },
+    { writeConcern: { w: "majority" } }
+);
+
+r.lectura_majority = db.reacciones.find({ _id: "react_wc_test" }).readConcern("majority").toArray();
+
+r.limpieza = db.reacciones.deleteOne({ _id: "react_wc_test" }, { writeConcern: { w: "majority" } }).deletedCount;
+
+r;

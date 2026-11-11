@@ -1,0 +1,6 @@
+use("ev-2-bd-nosql");
+
+({
+    reacciones_del_par: db.reacciones.countDocuments({ usuario_id: "user_473", publicacion_id: "pub_425" }),
+    en_respaldo: db.reacciones_respaldo.find().toArray()
+});

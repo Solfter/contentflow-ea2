@@ -1,0 +1,35 @@
+use("ev-2-bd-nosql");
+
+function resumen(e) {
+    const s = e.executionStats;
+    return {
+        plan: JSON.stringify(e.queryPlanner.winningPlan).includes("IXSCAN") ? "IXSCAN (usa índice)" : "COLLSCAN (recorre todo)",
+        devueltos: s.nReturned,
+        docs_examinados: s.totalDocsExamined,
+        tiempo_ms: s.executionTimeMillis
+    };
+}
+
+const resultado = {};
+
+// ----- ANTES de crear índices -----
+resultado.q1_antes = resumen(
+    db.publicaciones.find({ categoria: "Tecnología", tipo: "Video" }).explain("executionStats")
+);
+resultado.q2_antes = resumen(
+    db.reacciones.find({ publicacion_id: "pub_388" }).explain("executionStats")
+);
+
+// ----- Crear índices -----
+db.publicaciones.createIndex({ categoria: 1, tipo: 1 });
+db.reacciones.createIndex({ publicacion_id: 1 });
+
+// ----- DESPUÉS de crear índices -----
+resultado.q1_despues = resumen(
+    db.publicaciones.find({ categoria: "Tecnología", tipo: "Video" }).explain("executionStats")
+);
+resultado.q2_despues = resumen(
+    db.reacciones.find({ publicacion_id: "pub_388" }).explain("executionStats")
+);
+
+resultado;

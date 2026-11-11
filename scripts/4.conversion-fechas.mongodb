@@ -1,0 +1,33 @@
+use("ev-2-bd-nosql");
+
+const resultado = {};
+
+resultado.usuarios = db.usuarios.updateMany(
+    { fecha_registro: { $type: "string" } },
+    [ { $set: { fecha_registro: { $toDate: "$fecha_registro" } } } ]
+);
+
+resultado.publicaciones = db.publicaciones.updateMany(
+    { fecha_publicacion: { $type: "string" } },
+    [ { $set: { fecha_publicacion: { $toDate: "$fecha_publicacion" } } } ]
+);
+
+resultado.reacciones = db.reacciones.updateMany(
+    { fecha: { $type: "string" } },
+    [ { $set: { fecha: { $toDate: "$fecha" } } } ]
+);
+
+resultado.comentarios = db.comentarios.updateMany(
+    { fecha: { $type: "string" } },
+    [ { $set: { fecha: { $toDate: "$fecha" } } } ]
+);
+
+resultado.campanas = db.campanas.updateMany(
+    { $or: [ { fecha_inicio: { $type: "string" } }, { fecha_fin: { $type: "string" } } ] },
+    [ { $set: {
+        fecha_inicio: { $toDate: "$fecha_inicio" },
+        fecha_fin:    { $toDate: "$fecha_fin" }
+    } } ]
+);
+
+resultado;

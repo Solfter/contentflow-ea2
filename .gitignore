@@ -1,0 +1,18 @@
+# Secretos
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs de la API
+logs/
+*.log
+
+# Archivos temporales de Word
+~$*
+*.tmp

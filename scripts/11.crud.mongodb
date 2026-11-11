@@ -1,0 +1,81 @@
+use("ev-2-bd-nosql");
+
+const evidencia = {};
+
+// ---------- CREATE: alta de usuario, publicación, reacción y comentario ----------
+db.usuarios.insertOne({
+    _id: "user_demo",
+    nombre: "Usuario Demo",
+    correo: "demo@contentflow.com",
+    pais: "Chile",
+    genero: "Otro",
+    fecha_registro: new Date(),
+    dispositivo: "Móvil"
+});
+
+db.publicaciones.insertOne({
+    _id: "pub_demo",
+    usuario_id: "user_demo",
+    contenido: "Mi primera publicación en ContentFlow",
+    fecha_publicacion: new Date(),
+    categoria: "Tecnología",
+    hashtags: ["#innovacion"],
+    tipo: "Texto"
+});
+
+db.reacciones.insertOne({
+    _id: "react_demo",
+    usuario_id: "user_demo",
+    publicacion_id: "pub_demo",
+    tipo_reaccion: "Me gusta",
+    fecha: new Date()
+});
+
+db.comentarios.insertOne({
+    _id: "comm_demo",
+    usuario_id: "user_demo",
+    publicacion_id: "pub_demo",
+    comentario: "Probando comentarios",
+    fecha: new Date(),
+    likes: 0
+});
+
+// ---------- READ: verificar lo creado ----------
+evidencia.paso1_creado = {
+    usuario: db.usuarios.findOne({ _id: "user_demo" }),
+    publicacion: db.publicaciones.findOne({ _id: "pub_demo" }),
+    reaccion: db.reacciones.findOne({ _id: "react_demo" }),
+    comentario: db.comentarios.findOne({ _id: "comm_demo" })
+};
+
+// ---------- UPDATE ----------
+evidencia.paso2_comentario_antes = db.comentarios.findOne({ _id: "comm_demo" });
+
+db.comentarios.updateOne({ _id: "comm_demo" }, { $inc: { likes: 5 } });
+db.publicaciones.updateOne(
+    { _id: "pub_demo" },
+    { $push: { hashtags: "#nuevo" }, $set: { categoria: "Cultura" } }
+);
+db.reacciones.updateOne({ _id: "react_demo" }, { $set: { tipo_reaccion: "Me encanta" } });
+
+evidencia.paso3_despues_de_actualizar = {
+    comentario: db.comentarios.findOne({ _id: "comm_demo" }),
+    publicacion: db.publicaciones.findOne({ _id: "pub_demo" }),
+    reaccion: db.reacciones.findOne({ _id: "react_demo" })
+};
+
+// ---------- DELETE: baja del usuario y de todo lo que generó ----------
+const borrados = {
+    comentarios: db.comentarios.deleteMany({ usuario_id: "user_demo" }).deletedCount,
+    reacciones: db.reacciones.deleteMany({ usuario_id: "user_demo" }).deletedCount,
+    publicaciones: db.publicaciones.deleteMany({ usuario_id: "user_demo" }).deletedCount,
+    usuarios: db.usuarios.deleteOne({ _id: "user_demo" }).deletedCount
+};
+
+evidencia.paso4_eliminado = {
+    borrados,
+    quedan_en_usuarios: db.usuarios.countDocuments({ _id: "user_demo" }),
+    quedan_publicaciones: db.publicaciones.countDocuments({ usuario_id: "user_demo" })
+};
+
+evidencia;

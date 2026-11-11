@@ -1,0 +1,10 @@
+use("ev-2-bd-nosql");
+
+const nombres = ["campanas", "comentarios", "publicaciones", "reacciones", "usuarios"];
+
+const conteos = {};
+for (const nombre of nombres) {
+    conteos[nombre] = db.getCollection(nombre).countDocuments();
+}
+
+conteos;

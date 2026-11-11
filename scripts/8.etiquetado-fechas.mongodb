@@ -1,0 +1,58 @@
+use("ev-2-bd-nosql");
+
+// ---------- REACCIONES ----------
+const idsReac = db.reacciones.aggregate([
+    { $lookup: { from: "publicaciones", localField: "publicacion_id", foreignField: "_id", as: "p" } },
+    { $unwind: "$p" },
+    { $match: { $expr: { $lt: [ "$fecha", "$p.fecha_publicacion" ] } } },
+    { $project: { _id: 1 } }
+]).toArray().map(d => d._id);
+
+const resReac = db.reacciones.updateMany(
+    { _id: { $in: idsReac } },
+    { $set: { inconsistencia: "fecha_anterior_a_publicacion" } }
+);
+
+// ---------- COMENTARIOS ----------
+const idsCom = db.comentarios.aggregate([
+    { $lookup: { from: "publicaciones", localField: "publicacion_id", foreignField: "_id", as: "p" } },
+    { $unwind: "$p" },
+    { $match: { $expr: { $lt: [ "$fecha", "$p.fecha_publicacion" ] } } },
+    { $project: { _id: 1 } }
+]).toArray().map(d => d._id);
+
+const resCom = db.comentarios.updateMany(
+    { _id: { $in: idsCom } },
+    { $set: { inconsistencia: "fecha_anterior_a_publicacion" } }
+);
+
+// ---------- PUBLICACIONES ----------
+const idsPub = db.publicaciones.aggregate([
+    { $lookup: { from: "usuarios", localField: "usuario_id", foreignField: "_id", as: "u" } },
+    { $unwind: "$u" },
+    { $match: { $expr: { $lt: [ "$fecha_publicacion", "$u.fecha_registro" ] } } },
+    { $project: { _id: 1 } }
+]).toArray().map(d => d._id);
+
+const resPub = db.publicaciones.updateMany(
+    { _id: { $in: idsPub } },
+    { $set: { inconsistencia: "fecha_anterior_a_registro_autor" } }
+);
+
+// ---------- RESUMEN ----------
+({
+    reacciones: {
+        detectadas: idsReac.length,
+        etiquetadas: db.reacciones.countDocuments({ inconsistencia: "fecha_anterior_a_publicacion" })
+    },
+    comentarios: {
+        detectadas: idsCom.length,
+        modificadas: resCom.modifiedCount,
+        etiquetadas: db.comentarios.countDocuments({ inconsistencia: "fecha_anterior_a_publicacion" })
+    },
+    publicaciones: {
+        detectadas: idsPub.length,
+        modificadas: resPub.modifiedCount,
+        etiquetadas: db.publicaciones.countDocuments({ inconsistencia: "fecha_anterior_a_registro_autor" })
+    }
+});

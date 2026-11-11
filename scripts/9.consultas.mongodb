@@ -1,0 +1,47 @@
+use("ev-2-bd-nosql");
+
+const consultas = {};
+
+// C1: Publicaciones de la categoría Tecnología tipo Video, las 5 más recientes
+consultas.c1_tecnologia_video = db.publicaciones.find(
+    { categoria: "Tecnología", tipo: "Video" },
+    { contenido: 0 }
+).sort({ fecha_publicacion: -1 }).limit(5).toArray();
+
+// C2: Usuarios de Macedonia o Korea que se registraron desde un móvil, solo nombre, país y dispositivo
+consultas.c2_usuarios_movil = db.usuarios.find(
+    { pais: { $in: ["Macedonia", "Korea"] }, dispositivo: "Móvil" },
+    { nombre: 1, pais: 1, dispositivo: 1, _id: 0 }
+).toArray();
+
+// C3: Comentarios muy populares (más de 90 likes) sin inconsistencias, ordenados por likes
+consultas.c3_comentarios_populares = db.comentarios.find(
+    { likes: { $gt: 90 }, inconsistencia: { $exists: false } },
+    { comentario: 1, likes: 1, _id: 0 }
+).sort({ likes: -1 }).limit(5).toArray();
+
+// C4: Usuarios más activos: cantidad de publicaciones por usuario (top 5)
+consultas.c4_usuarios_activos = db.publicaciones.aggregate([
+    { $group: { _id: "$usuario_id", total_publicaciones: { $sum: 1 } } },
+    { $sort: { total_publicaciones: -1 } },
+    { $limit: 5 }
+]).toArray();
+
+// C5: Cantidad de reacciones por tipo
+consultas.c5_reacciones_por_tipo = db.reacciones.aggregate([
+    { $group: { _id: "$tipo_reaccion", total: { $sum: 1 } } },
+    { $sort: { total: -1 } }
+]).toArray();
+
+// C6: Publicaciones más populares: cantidad de reacciones por publicación con datos de la publicación
+consultas.c6_publicaciones_populares = db.reacciones.aggregate([
+    { $match: { inconsistencia: { $exists: false } } },
+    { $group: { _id: "$publicacion_id", reacciones: { $sum: 1 } } },
+    { $sort: { reacciones: -1 } },
+    { $limit: 5 },
+    { $lookup: { from: "publicaciones", localField: "_id", foreignField: "_id", as: "pub" } },
+    { $unwind: "$pub" },
+    { $project: { _id: 1, reacciones: 1, categoria: "$pub.categoria", tipo: "$pub.tipo" } }
+]).toArray();
+
+consultas;

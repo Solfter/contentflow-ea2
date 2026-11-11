@@ -1,0 +1,35 @@
+use("ev-2-bd-nosql");
+
+const huerfanos = {};
+
+huerfanos.publicaciones_sin_usuario = db.publicaciones.aggregate([
+    { $lookup: { from: "usuarios", localField: "usuario_id", foreignField: "_id", as: "u" } },
+    { $match: { $expr: { $eq: [ { $size: "$u" }, 0 ] } } },
+    { $project: { _id: 1, usuario_id: 1 } }
+]).toArray();
+
+huerfanos.reacciones_sin_usuario = db.reacciones.aggregate([
+    { $lookup: { from: "usuarios", localField: "usuario_id", foreignField: "_id", as: "u" } },
+    { $match: { $expr: { $eq: [ { $size: "$u" }, 0 ] } } },
+    { $project: { _id: 1, usuario_id: 1 } }
+]).toArray();
+
+huerfanos.reacciones_sin_publicacion = db.reacciones.aggregate([
+    { $lookup: { from: "publicaciones", localField: "publicacion_id", foreignField: "_id", as: "p" } },
+    { $match: { $expr: { $eq: [ { $size: "$p" }, 0 ] } } },
+    { $project: { _id: 1, publicacion_id: 1 } }
+]).toArray();
+
+huerfanos.comentarios_sin_usuario = db.comentarios.aggregate([
+    { $lookup: { from: "usuarios", localField: "usuario_id", foreignField: "_id", as: "u" } },
+    { $match: { $expr: { $eq: [ { $size: "$u" }, 0 ] } } },
+    { $project: { _id: 1, usuario_id: 1 } }
+]).toArray();
+
+huerfanos.comentarios_sin_publicacion = db.comentarios.aggregate([
+    { $lookup: { from: "publicaciones", localField: "publicacion_id", foreignField: "_id", as: "p" } },
+    { $match: { $expr: { $eq: [ { $size: "$p" }, 0 ] } } },
+    { $project: { _id: 1, publicacion_id: 1 } }
+]).toArray();
+
+huerfanos;

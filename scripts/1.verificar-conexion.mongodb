@@ -1,0 +1,9 @@
+use('ev-2-bd-nosql')
+db.runCommand({ ping: 1 });
+db.getCollectionNames();
+
+db.usuarios.insertOne({ _id: "text_conexion", nombre: "prueba" });
+
+use('ev-2-bd-nosql')
+db.usuarios.findOne({ _id: "text_conexion" });
+db.usuarios.deleteOne({ _id: "text_conexion" });
